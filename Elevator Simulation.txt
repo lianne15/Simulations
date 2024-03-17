@@ -1,0 +1,55 @@
+import random
+import threading
+import time
+
+class Elevator:
+    def __init__(self, elevator_id, num_floors):
+        self.elevator_id = elevator_id
+        self.num_floors = num_floors
+        self.current_floor = 1
+        self.direction = "up"
+        self.requests = set()
+        self.lock = threading.Lock()
+
+    def move(self):
+        if self.direction == "up":
+            self.current_floor += 1
+            if self.current_floor == self.num_floors:
+                self.direction = "down"
+        else:
+            self.current_floor -= 1
+            if self.current_floor == 1:
+                self.direction = "up"
+
+    def request_floor(self, floor):
+        with self.lock:
+            self.requests.add(floor)
+
+    def process_requests(self):
+        while True:
+            time.sleep(0.5)  # Simulate time for moving between floors
+            with self.lock:
+                if self.requests:
+                    if self.current_floor in self.requests:
+                        print(f"Elevator {self.elevator_id} reached floor {self.current_floor}")
+                        self.requests.remove(self.current_floor)
+                    self.move()
+
+
+def simulate_elevator_system(num_floors, num_elevators, num_requests):
+    elevators = [Elevator(i + 1, num_floors) for i in range(num_elevators)]
+    for _ in range(num_requests):
+        floor = random.randint(1, num_floors)
+        elevator = random.choice(elevators)
+        elevator.request_floor(floor)
+    for elevator in elevators:
+        thread = threading.Thread(target=elevator.process_requests)
+        thread.start()
+    
+
+if __name__ == "__main__":
+    num_floors = 10
+    num_elevators = 4
+    num_requests = 20
+
+    simulate_elevator_system(num_floors, num_elevators, num_requests)
